@@ -12,6 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,6 +29,9 @@ class CouponServiceTest {
 
     @Autowired
     private CouponUsageRepository couponUsageRepository;
+
+    @Autowired
+    private GeoLocationService geoLocationService;
 
     private Coupon testCoupon;
 
@@ -100,6 +104,66 @@ class CouponServiceTest {
         // When & Then
         assertThrows(IllegalArgumentException.class, () -> 
             couponService.getCouponByCode(invalidCode)
+        );
+    }
+
+    @Test
+    void useCoupon_ShouldIncrementUsesAndCreateUsageRecord() {
+        // Given
+        String userId = "user123";
+        String ipAddress = "192.168.1.1";
+
+        // When
+        couponService.useCoupon(testCoupon.getCode(), userId, ipAddress);
+
+        // Then
+        Coupon updatedCoupon = couponRepository.findByCodeIgnoreCase(testCoupon.getCode()).orElseThrow();
+        assertEquals(1, updatedCoupon.getCurrentUses());
+        
+        Optional<CouponUsage> usage = couponUsageRepository.findByCouponIdAndUserId(testCoupon.getId(), userId);
+        assertTrue(usage.isPresent());
+        assertEquals(testCoupon.getId(), usage.get().getCoupon().getId());
+        assertEquals(userId, usage.get().getUserId());
+    }
+
+    @Test
+    void useCoupon_ShouldThrowException_WhenCouponNotFound() {
+        // Given
+        String invalidCode = "INVALID";
+        String userId = "user123";
+        String ipAddress = "192.168.1.1";
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> 
+            couponService.useCoupon(invalidCode, userId, ipAddress)
+        );
+    }
+
+    @Test
+    void useCoupon_ShouldThrowException_WhenMaxUsesReached() {
+        // Given
+        String userId = "user123";
+        String ipAddress = "192.168.1.1";
+        testCoupon.setCurrentUses(testCoupon.getMaxUses());
+        couponRepository.save(testCoupon);
+
+        // When & Then
+        assertThrows(IllegalStateException.class, () -> 
+            couponService.useCoupon(testCoupon.getCode(), userId, ipAddress)
+        );
+    }
+
+    @Test
+    void useCoupon_ShouldThrowException_WhenUserAlreadyUsedCoupon() {
+        // Given
+        String userId = "user123";
+        String ipAddress = "192.168.1.1";
+        CouponUsage usage = new CouponUsage(testCoupon, userId);
+        couponUsageRepository.save(usage);
+
+        // When & Then
+        assertThrows(IllegalStateException.class, () -> 
+            couponService.useCoupon(testCoupon.getCode(), userId, ipAddress)
         );
     }
 } 
