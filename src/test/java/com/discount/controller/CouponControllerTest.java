@@ -156,17 +156,37 @@ public class CouponControllerTest {
         String code = "TEST123";
         String userId = "user123";
         String ipAddress = "192.168.1.1";
+        String country = "US";
 
         // Act & Assert
         mockMvc.perform(post("/api/coupons/{code}/use", code)
                 .header("X-User-Id", userId)
+                .header("X-Country", country)
                 .with(request -> {
                     request.setRemoteAddr(ipAddress);
                     return request;
                 }))
             .andExpect(status().isOk());
 
-        verify(couponService).useCoupon(code, userId, ipAddress);
+        verify(couponService).useCoupon(code, userId, ipAddress, country);
+    }
+
+    @Test
+    void useCoupon_shouldReturnSuccess_withForwardedIp() throws Exception {
+        // Arrange
+        String code = "TEST123";
+        String userId = "user123";
+        String forwardedIp = "203.0.113.1";
+        String country = "US";
+
+        // Act & Assert
+        mockMvc.perform(post("/api/coupons/{code}/use", code)
+                .header("X-User-Id", userId)
+                .header("X-Country", country)
+                .header("X-Forwarded-For", forwardedIp))
+            .andExpect(status().isOk());
+
+        verify(couponService).useCoupon(code, userId, forwardedIp, country);
     }
 
     @Test
@@ -174,9 +194,11 @@ public class CouponControllerTest {
         // Arrange
         String code = "TEST123";
         String ipAddress = "192.168.1.1";
+        String country = "US";
 
         // Act & Assert
         mockMvc.perform(post("/api/coupons/{code}/use", code)
+                .header("X-Country", country)
                 .with(request -> {
                     request.setRemoteAddr(ipAddress);
                     return request;
@@ -190,20 +212,22 @@ public class CouponControllerTest {
         String code = "NONEXISTENT";
         String userId = "user123";
         String ipAddress = "192.168.1.1";
+        String country = "US";
         
         doThrow(new IllegalArgumentException("Coupon not found"))
-            .when(couponService).useCoupon(code, userId, ipAddress);
+            .when(couponService).useCoupon(code, userId, ipAddress, country);
 
         // Act & Assert
         mockMvc.perform(post("/api/coupons/{code}/use", code)
                 .header("X-User-Id", userId)
+                .header("X-Country", country)
                 .with(request -> {
                     request.setRemoteAddr(ipAddress);
                     return request;
                 }))
             .andExpect(status().isNotFound());
 
-        verify(couponService).useCoupon(code, userId, ipAddress);
+        verify(couponService).useCoupon(code, userId, ipAddress, country);
     }
 
     @Test
@@ -212,20 +236,22 @@ public class CouponControllerTest {
         String code = "TEST123";
         String userId = "user123";
         String ipAddress = "192.168.1.1";
+        String country = "US";
         
         doThrow(new IllegalStateException("Maximum uses reached"))
-            .when(couponService).useCoupon(code, userId, ipAddress);
+            .when(couponService).useCoupon(code, userId, ipAddress, country);
 
         // Act & Assert
         mockMvc.perform(post("/api/coupons/{code}/use", code)
                 .header("X-User-Id", userId)
+                .header("X-Country", country)
                 .with(request -> {
                     request.setRemoteAddr(ipAddress);
                     return request;
                 }))
             .andExpect(status().isConflict());
 
-        verify(couponService).useCoupon(code, userId, ipAddress);
+        verify(couponService).useCoupon(code, userId, ipAddress, country);
     }
 
     @Test
@@ -234,19 +260,21 @@ public class CouponControllerTest {
         String code = "TEST123";
         String userId = "user123";
         String ipAddress = "192.168.1.1";
+        String country = "US";
         
         doThrow(new IllegalStateException("User already used this coupon"))
-            .when(couponService).useCoupon(code, userId, ipAddress);
+            .when(couponService).useCoupon(code, userId, ipAddress, country);
 
         // Act & Assert
         mockMvc.perform(post("/api/coupons/{code}/use", code)
                 .header("X-User-Id", userId)
+                .header("X-Country", country)
                 .with(request -> {
                     request.setRemoteAddr(ipAddress);
                     return request;
                 }))
             .andExpect(status().isConflict());
 
-        verify(couponService).useCoupon(code, userId, ipAddress);
+        verify(couponService).useCoupon(code, userId, ipAddress, country);
     }
 }

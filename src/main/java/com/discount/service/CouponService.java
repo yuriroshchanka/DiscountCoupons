@@ -25,17 +25,28 @@ public class CouponService {
 
     @Transactional
     public Coupon createCoupon(String code, Integer maxUses, String country) {
+        // Check if coupon with same code (case-insensitive) already exists
+        if (couponRepository.findByCodeIgnoreCase(code).isPresent()) {
+            throw new IllegalStateException("Coupon code already exists");
+        }
+        
         Coupon coupon = new Coupon(code, maxUses, country);
         return couponRepository.save(coupon);
     }
 
     @Transactional
-    public void useCoupon(String code, String userId, String ipAddress) {
+    public void useCoupon(String code, String userId, String ipAddress, String country) {
         Coupon coupon = couponRepository.findByCodeIgnoreCase(code)
                 .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));
 
-        String userCountry = geoLocationService.getCountryFromIp(ipAddress);
-        if (!coupon.getCountry().equalsIgnoreCase(userCountry)) {
+        // If country is provided in the request, use it directly
+        // Otherwise, try to determine it from IP address
+        String userCountry = country != null ? country.toUpperCase() : 
+            geoLocationService.getCountryFromIp(ipAddress);
+
+        // Only validate country if the coupon has a country restriction
+        if (coupon.getCountry() != null && !coupon.getCountry().isEmpty() && 
+            !coupon.getCountry().equalsIgnoreCase(userCountry)) {
             throw new IllegalArgumentException("Coupon is not valid for your country");
         }
 
@@ -56,6 +67,7 @@ public class CouponService {
         return couponRepository.findAll();
     }
 
+    @Transactional
     public Coupon getCouponByCode(String code) {
         return couponRepository.findByCodeIgnoreCase(code)
                 .orElseThrow(() -> new IllegalArgumentException("Coupon not found"));

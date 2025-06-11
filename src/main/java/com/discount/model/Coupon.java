@@ -30,7 +30,7 @@ public class Coupon {
     @Min(0)
     private Integer currentUses;
 
-    @NotBlank
+    @Column(nullable = true)
     private String country;
 
     @Version
@@ -43,7 +43,7 @@ public class Coupon {
         this.code = code.toUpperCase();
         this.maxUses = maxUses;
         this.currentUses = 0;
-        this.country = country.toUpperCase();
+        this.country = country != null ? country.toUpperCase() : null;
     }
 
     public Long getId() {

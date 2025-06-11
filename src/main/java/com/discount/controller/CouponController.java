@@ -34,9 +34,11 @@ public class CouponController {
     public ResponseEntity<Void> useCoupon(
             @PathVariable String code,
             @RequestHeader("X-User-Id") String userId,
+            @RequestHeader(value = "X-Forwarded-For", required = false) String forwardedFor,
+            @RequestHeader(value = "X-Country", required = false) String country,
             HttpServletRequest request) {
-        String ipAddress = request.getRemoteAddr();
-        couponService.useCoupon(code, userId, ipAddress);
+        String ipAddress = forwardedFor != null ? forwardedFor.split(",")[0].trim() : request.getRemoteAddr();
+        couponService.useCoupon(code, userId, ipAddress, country);
         return ResponseEntity.ok().build();
     }
 
