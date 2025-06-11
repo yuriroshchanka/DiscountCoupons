@@ -57,4 +57,4 @@ public class CouponController {
         @Min(1) Integer maxUses,
         @NotBlank String country
     ) {}
-} 
+}

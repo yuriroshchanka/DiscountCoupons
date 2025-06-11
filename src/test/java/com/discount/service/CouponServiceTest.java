@@ -1,7 +1,6 @@
 package com.discount.service;
 
 import com.discount.model.Coupon;
-import com.discount.model.CouponUsage;
 import com.discount.repository.CouponRepository;
 import com.discount.repository.CouponUsageRepository;
 import jakarta.persistence.EntityManager;
@@ -13,7 +12,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
