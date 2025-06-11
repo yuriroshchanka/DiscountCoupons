@@ -12,7 +12,7 @@ A REST service for managing discount coupons with country-based restrictions and
 
 ## Technical Stack
 
-- Java 17
+- Java 21
 - Spring Boot 3.2.3
 - Spring Data JPA
 - H2 Database (in-memory)
@@ -41,7 +41,7 @@ X-User-Id: user123
 
 ## Running the Application
 
-1. Ensure you have Java 17 installed
+1. Ensure you have Java 21 installed
 2. Build the project:
    ```bash
    mvn clean install
